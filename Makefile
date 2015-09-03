@@ -20,34 +20,9 @@ clean:
 setup:
 	bash -ex -c 'for f in */setup.sh; do $$f; done'
 
-package: war msi osx deb rpm suse
+package: deb
 
-publish: war.publish msi.publish osx.publish deb.publish rpm.publish suse.publish
-
-test: deb.test rpm.test suse.test
-
-
-war: ${WAR}
-war.publish: ${WAR}
-	ssh ${PKGSERVER} mkdir -p ${WARDIR}/${VERSION}/
-	rsync -avz "${WAR}" ${PKGSERVER}:${WARDIR}/${VERSION}/${ARTIFACTNAME}.war
-
-
-
-msi: ${MSI}
-${MSI}: ${WAR} ${CLI} $(shell find msi -type f)
-	./msi/build-on-jenkins.sh
-msi.publish: ${MSI}
-	./msi/publish.sh
-
-
-
-osx: ${OSX}
-${OSX}: ${WAR} ${CLI}  $(shell find osx -type f | sed -e 's/ /\\ /g')
-	./osx/build-on-jenkins.sh
-osx.publish: ${OSX}
-	./osx/publish.sh
-
+publish: deb.publish
 
 
 deb: ${DEB}
@@ -56,22 +31,7 @@ ${DEB}: ${WAR} $(shell find deb/build -type f)
 deb.publish: ${DEB} $(shell find deb/publish -type f)
 	./deb/publish/publish.sh
 
-
-
-rpm: ${RPM}
-${RPM}: ${WAR}  $(shell find rpm/build -type f)
-	./rpm/build/build.sh
-rpm.publish: ${RPM} $(shell find rpm/publish -type f)
-	./rpm/publish/publish.sh
-
-suse: ${SUSE}
-${SUSE}: ${WAR}  $(shell find suse/build -type f)
-	./suse/build/build.sh
-suse.publish: ${SUSE} $(shell find suse/publish -type f)
-	./suse/publish/publish.sh
-
-
-
+	
 ${CLI}:
 	@mkdir ${TARGET} || true
 	wget -O $@.tmp ${JENKINS_URL}jnlpJars/jenkins-cli.jar
